@@ -1,0 +1,65 @@
+clc;clear;
+close all;
+data = load ("iris.txt");
+data = data(randperm(size(data,1)),:);
+X = data(:,1:4);
+u_mat = rand(150, 3);
+rowsum = sum(u_mat,2);
+u_mat = bsxfun(@rdivide, u_mat, rowsum);    %***partition matrix*****
+C = zeros(3,4);
+d_f=2;
+centers = 3;
+itr = 100;
+%***********centre calculation*********
+for j = 1:centers
+    S =0;A=0;
+    for i =1 : size(data,1)
+        A = A+(( u_mat(i,j).^2) * X(i,:));
+        S = S+(u_mat(i,j)^2);
+    end
+    A =A/S;
+    C(j,:) = A;
+end
+u_mat1 = u_mat;
+for p =1:itr
+    %***************partition matrix updation************
+ for k = 1:size(u_mat1,1)
+   u_mat1(k,1) = 1/( ((X(k,:)-C(1,:))/(X(k,:)-C(1,:)))^(2/(d_f-1)) + ((X(k,:)-C(1,:))/(X(k,:)-C(2,:)))^(2/(d_f-1)) + ((X(k,:)-C(1,:))/(X(k,:)-C(3,:)))^(2/(d_f-1)) );
+   u_mat1(k,2) = 1/( ((X(k,:)-C(2,:))/(X(k,:)-C(1,:)))^(2/(d_f-1)) + ((X(k,:)-C(2,:))/(X(k,:)-C(2,:)))^(2/(d_f-1)) + ((X(k,:)-C(2,:))/(X(k,:)-C(3,:)))^(2/(d_f-1)) ); 
+   u_mat1(k,3) = 1/( ((X(k,:)-C(3,:))/(X(k,:)-C(1,:)))^(2/(d_f-1)) + ((X(k,:)-C(3,:))/(X(k,:)-C(2,:)))^(2/(d_f-1)) + ((X(k,:)-C(3,:))/(X(k,:)-C(3,:)))^(2/(d_f-1)) );
+ end
+ 
+%*********** updated centre calculation*********
+
+for j = 1:centers
+    S =0;A=0;
+    for i =1 : size(data,1)
+        A = A+(( u_mat1(i,j).^2) * X(i,:));
+        S = S+(u_mat1(i,j)^2);
+    end
+    A =A/S;
+    C(j,:) = A;
+end
+ 
+ 
+end
+
+%***********Assigning class**********
+pred = zeros(150,1);
+m = zeros(150,1);
+for i = 1: size(pred,1)
+   [m(i),pred(i)] = max(u_mat1(i,:)); 
+end
+
+conf_mat = confusionmat(data(:,end),pred) %**********confusion matrix********
+
+%**************accuracy calculation***************
+count = 0;
+    for ii =1:3
+        [v,index]  = max(conf_mat');
+        count = v(1) + count;
+        conf_mat(1,:) = [];
+        conf_mat(:,index(1))= [];
+        
+    end
+    acc = count/150 * 100

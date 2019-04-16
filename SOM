@@ -1,0 +1,59 @@
+clc
+data = load ("iris.txt");
+sig=0.5;
+data = data(randperm(size(data,1)),:);
+
+w = randi([-300 300],3,4)/1000;
+outputs = 3;
+alpha=0.1;
+data = [data zeros(size(data,1),1)] ;   %********addition of column***********
+
+while(true)
+    f=0;
+    %data = data(randperm(size(data,1)),:);
+for i =1:size(data,1)
+    
+    %************minimum distance calculation***********
+        D = sum((abs(data(i,1:4)-w(:,:)))');    %********competition*******
+        [val, index] = min(D);
+            if (data(i,size(data,2))~=index)
+                data(i,size(data,2)) = index;
+                f=1;
+            end
+            index=index-1;
+            d = abs(([0:outputs-1]-index)); %**********co-operation************
+        
+            h = zeros(1,3);
+        
+        for l = 1:outputs
+            h(l) = exp(-1*(d(l).^2)/(2*(sig.^2)));
+        end
+    
+        %************weight updation************
+     for o = 1:3
+    for p =1:size(w,2)
+        w(o,p) = w(o,p) + h(o)*alpha*(data(i,p)-w(o,p));
+    end
+   
+     end
+
+    
+     
+end
+if(f==0)
+    break;
+end
+end
+%***************** confusion matrix ************
+conf_mat = confusionmat(data(:,5),data(:,6))
+
+%**************accuracy*******************
+count = 0;
+    for ii =1:outputs
+        [v,index]  = max(conf_mat');
+        count = v(1) + count;
+        conf_mat(1,:) = [];
+        conf_mat(:,index(1))= [];
+        
+    end
+    acc = count/150 * 100
